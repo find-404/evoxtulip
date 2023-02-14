@@ -1,0 +1,138 @@
+trigger:
+- main
+
+variables:
+  # Set environment variables
+  ANDROID_HOME: /opt/android-sdk
+  JAVA_HOME: /usr/lib/jvm/java-11-openjdk-amd64
+
+stages:
+- stage: Build_Android
+  displayName: Build Evolution X
+  jobs:
+  - job: Build
+    displayName: Build Evolution X
+    pool:
+      vmImage: 'ubuntu-20.04'
+    steps:
+    - task: UseJavaVersion@1
+      inputs:
+        versionSpec: '11'
+        architecture: 'x64'
+
+    - task: Bash@3
+      inputs:
+        targetType: 'inline'
+        script: |
+          sudo apt-get update && sudo apt-get install openjdk-11-jdk -y
+          sudo apt-get install -y git-core gnupg flex bison gperf libsdl1.2-dev libesd0-dev squashfs-tools build-essential zip curl libncurses5-dev zlib1g-dev openjdk-8-jre openjdk-8-jdk pngcrush schedtool libxml2 libxml2-utils xsltproc lzop libc6-dev schedtool g++-multilib lib32z1-dev lib32ncurses5-dev lib32readline-gplv2-dev gcc-multilib maven tmux screen w3m ncftp
+
+    - task: Bash@3
+      inputs:
+        targetType: 'inline'
+        script: |
+          sudo apt-get install unzip
+          wget -q https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O android-sdk.zip
+          unzip -q android-sdk.zip -d ${ANDROID_HOME}
+          rm android-sdk.zip
+          echo "y" | ${ANDROID_HOME}/cmdline-tools/bin/sdkmanager --sdk_root=${ANDROID_HOME} "platform-tools" "platforms;android-33" "build-tools;33.0.0"
+
+    - task: Bash@3
+      inputs:
+        targetType: 'inline'
+        script: |
+          echo "export ANDROID_HOME=${ANDROID_HOME}" >> $(Build.ArtifactStagingDirectory)/setenv.sh
+          echo "export JAVA_HOME=${JAVA_HOME}" >> $(Build.ArtifactStagingDirectory)/setenv.sh
+          echo "export PATH=${ANDROID_HOME}/tools:${ANDROID_HOME}/platform-tools:${JAVA_HOME}/bin:$PATH" >> $(Build.ArtifactStagingDirectory)/setenv.sh
+
+    - task: Bash@3
+      inputs:
+        targetType: 'inline'
+        script: |
+          mkdir -p ~/.bin
+          PATH="${HOME}/.bin:${PATH}"
+          curl https://storage.googleapis.com/git-repo-downloads/repo > ~/.bin/repo
+          chmod a+rx ~/.bin/repo
+          repo init -u https://github.com/Evolution-X/manifest -b tiramisu
+          repo sync -c -j$(nproc --all) --force-sync --no-clone-bundle --no-tags
+
+    - task: Bash@3
+      inputs:
+        targetType: 'inline'
+        script: |
+          . /build/envsetup.sh
+          lunch evolution_tulip-userdebug
+          mka evolution
+
+    - task: PublishBuildArtifacts@1
+      inputs:
+        pathtoPublish: 'out/target/product/tulip/EvolutionX*.zip'
+        artifactName: 'evolution-x-tulip-build'trigger:
+- main
+
+variables:
+  # Set environment variables
+  ANDROID_HOME: /opt/android-sdk
+  JAVA_HOME: /usr/lib/jvm/java-11-openjdk-amd64
+
+stages:
+- stage: Build_Android
+  displayName: Build Evolution X
+  jobs:
+  - job: Build
+    displayName: Build Evolution X
+    pool:
+      vmImage: 'ubuntu-20.04'
+    steps:
+    - task: UseJavaVersion@1
+      inputs:
+        versionSpec: '11'
+        architecture: 'x64'
+
+    - task: Bash@3
+      inputs:
+        targetType: 'inline'
+        script: |
+          sudo apt-get update && sudo apt-get install openjdk-11-jdk -y
+
+    - task: Bash@3
+      inputs:
+        targetType: 'inline'
+        script: |
+          sudo apt-get install unzip
+          wget -q https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O android-sdk.zip
+          unzip -q android-sdk.zip -d ${ANDROID_HOME}
+          rm android-sdk.zip
+          echo "y" | ${ANDROID_HOME}/cmdline-tools/bin/sdkmanager --sdk_root=${ANDROID_HOME} "platform-tools" "platforms;android-33" "build-tools;33.0.0"
+
+    - task: Bash@3
+      inputs:
+        targetType: 'inline'
+        script: |
+          echo "export ANDROID_HOME=${ANDROID_HOME}" >> $(Build.ArtifactStagingDirectory)/setenv.sh
+          echo "export JAVA_HOME=${JAVA_HOME}" >> $(Build.ArtifactStagingDirectory)/setenv.sh
+          echo "export PATH=${ANDROID_HOME}/tools:${ANDROID_HOME}/platform-tools:${JAVA_HOME}/bin:$PATH" >> $(Build.ArtifactStagingDirectory)/setenv.sh
+
+    - task: Bash@3
+      inputs:
+        targetType: 'inline'
+        script: |
+          mkdir -p ~/.bin
+          PATH="${HOME}/.bin:${PATH}"
+          curl https://storage.googleapis.com/git-repo-downloads/repo > ~/.bin/repo
+          chmod a+rx ~/.bin/repo
+          repo init -u https://github.com/Evolution-X/manifest -b tiramisu
+          repo sync -c -j$(nproc --all) --force-sync --no-clone-bundle --no-tags
+
+    - task: Bash@3
+      inputs:
+        targetType: 'inline'
+        script: |
+          . /build/envsetup.sh
+          lunch evolution_tulip-userdebug
+          mka evolution
+
+    - task: PublishBuildArtifacts@1
+      inputs:
+        pathtoPublish: 'out/target/product/tulip/EvolutionX*.zip'
+        artifactName: 'evolution-x-tulip-build'
