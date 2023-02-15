@@ -3,7 +3,9 @@ version: 2.1
 jobs:
   build:
     machine:
-      image: ubuntu-20.04:current
+      image: ubuntu:20.04-latest
+      resources:
+        class: medium
 
     working_directory: ~/code
 
