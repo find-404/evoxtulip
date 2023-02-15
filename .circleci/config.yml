@@ -3,7 +3,7 @@ version: 2.1
 jobs:
   build:
     machine:
-      image: ubuntu-20.04
+      image: ubuntu-20.04:current
 
     working_directory: ~/code
 
