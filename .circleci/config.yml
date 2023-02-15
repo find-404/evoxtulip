@@ -2,8 +2,50 @@ jobs:
   build:
     machine:
       image: ubuntu-2004:2022.10.1
+      
+    working_directory: ~/code
+
     steps:
       - checkout
-      # Whatever you want to do
-      - run: sudo apt-get update && sudo apt-get install -y cowsay
-      - run: cowsay Continuous Integration Rocks!
+
+      - run:
+          name: Set up JDK 11
+          command: sudo apt-get update && sudo apt-get install openjdk-11-jdk -y
+
+      - run:
+          name: Set up Android SDK
+          command: |
+            sudo apt-get install unzip
+            wget -q https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O android-sdk.zip
+            unzip -q android-sdk.zip -d ${HOME}/android-sdk-linux
+            rm android-sdk.zip
+            echo "y" | ${HOME}/android-sdk-linux/cmdline-tools/bin/sdkmanager --sdk_root=${HOME}/android-sdk-linux "platform-tools" "platforms;android-33" "build-tools;33.0.0"
+
+      - run:
+          name: Set environment variables
+          command: |
+            echo "export ANDROID_HOME=${HOME}/android-sdk-linux" >> $BASH_ENV
+            echo "export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64" >> $BASH_ENV
+            echo "export PATH=${HOME}/android-sdk-linux/tools:${HOME}/android-sdk-linux/platform-tools:${JAVA_HOME}/bin:$PATH" >> $BASH_ENV
+            source $BASH_ENV
+
+      - run:
+          name: Checkout the code
+          command: |
+            mkdir -p ~/.bin
+            PATH="${HOME}/.bin:${PATH}"
+            curl https://storage.googleapis.com/git-repo-downloads/repo > ~/.bin/repo
+            chmod a+rx ~/.bin/repo
+            repo init -u https://github.com/Evolution-X/manifest -b tiramisu
+            repo sync -c -j$(nproc --all) --force-sync --no-clone-bundle --no-tags
+
+      - run:
+          name: Build Evolution X
+          command: |
+            . /build/envsetup.sh
+            lunch evolution_tulip-userdebug
+            mka evolution
+
+      - store_artifacts:
+          path: out/target/product/tulip/EvolutionX*.zip
+          destination: artifacts/
