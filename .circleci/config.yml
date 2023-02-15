@@ -32,10 +32,11 @@ jobs:
       - run:
           name: Checkout the code
           command: |
-            mkdir -p ~/.bin
-            PATH="${HOME}/.bin:${PATH}"
-            curl https://storage.googleapis.com/git-repo-downloads/repo > ~/.bin/repo
-            chmod a+rx ~/.bin/repo
+            mkdir -p ~/bin
+            curl https://storage.googleapis.com/git-repo-downloads/repo > ~/bin/repo
+            chmod a+x ~/bin/repo
+            export PATH=~/bin:$PATH
+            source ~/.bashrc
             git config --global user.name "find-404"
             git config --global user.email "firdiansyaindrianto@#gmail.com"
             repo init -u https://github.com/Evolution-X/manifest -b tiramisu
@@ -44,6 +45,7 @@ jobs:
       - run:
           name: Build Evolution X
           command: |
+            export PATH=~/bin:$PATH
             . build/envsetup.sh
             lunch evolution_tulip-userdebug
             mka evolution
