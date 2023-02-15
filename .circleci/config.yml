@@ -36,8 +36,9 @@ jobs:
             PATH="${HOME}/.bin:${PATH}"
             curl https://storage.googleapis.com/git-repo-downloads/repo > ~/.bin/repo
             chmod a+rx ~/.bin/repo
+            git config --global user.name "find-404"
+            git config --global user.email "firdiansyaindrianto@#gmail.com"
             repo init -u https://github.com/Evolution-X/manifest -b tiramisu
-            y
             repo sync -c -j$(nproc --all) --force-sync --no-clone-bundle --no-tags
 
       - run:
