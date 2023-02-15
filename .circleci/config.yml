@@ -44,7 +44,7 @@ jobs:
       - run:
           name: Build Evolution X
           command: |
-            . /build/envsetup.sh
+            . build/envsetup.sh
             lunch evolution_tulip-userdebug
             mka evolution
 
