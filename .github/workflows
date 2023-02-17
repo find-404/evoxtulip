@@ -1,0 +1,58 @@
+name: Evolution X Android 13 Tulip Build
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  # Set environment variables
+  ANDROID_HOME: /opt/android-sdk
+  JAVA_HOME: /usr/lib/jvm/java-11-openjdk-amd64
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04-8core
+    
+    steps:
+
+    - name: Set up JDK 11
+      run: sudo apt-get update && sudo apt-get install openjdk-11-jdk git gnupg flex bison gperf libsdl1.2-dev squashfs-tools build-essential zip curl libncurses5-dev zlib1g-dev openjdk-11-jre pngcrush schedtool libxml2 libxml2-utils xsltproc lzop libc6-dev schedtool g++-multilib lib32z1-dev lib32ncurses-dev  gcc-multilib maven tmux screen w3m ncftp -y
+
+    - name: Set up Android SDK
+      run: |
+        sudo apt-get install unzip
+        wget -q https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O android-sdk.zip
+        unzip -q android-sdk.zip -d ${ANDROID_HOME}
+        rm android-sdk.zip
+        echo "y" | ${ANDROID_HOME}/cmdline-tools/bin/sdkmanager --sdk_root=${ANDROID_HOME} "platform-tools" "platforms;android-33" "build-tools;33.0.0"
+    - name: Set environment variables
+      run: |
+        echo "export ANDROID_HOME=${ANDROID_HOME}" >> $GITHUB_ENV
+        echo "export JAVA_HOME=${JAVA_HOME}" >> $GITHUB_ENV
+        echo "export PATH=${ANDROID_HOME}/tools:${ANDROID_HOME}/platform-tools:${JAVA_HOME}/bin:$PATH" >> $GITHUB_ENV
+        
+    - name: Checkout the code
+      run: |
+        mkdir -p ~/bin
+        curl https://storage.googleapis.com/git-repo-downloads/repo > ~/bin/repo
+        chmod a+x ~/bin/repo
+        export PATH=~/bin:$PATH
+        source ~/.bashrc
+        git config --global user.name "find-404"
+        git config --global user.email "firdiansyaindrianto@#gmail.com"
+        repo init -u https://github.com/Evolution-X/manifest -b tiramisu
+        repo sync -c -j$(nproc --all) --force-sync --no-clone-bundle --no-tags
+        
+    - name: Build Evolution X
+      run: |
+        export PATH=~/bin:$PATH
+        . build/envsetup.sh
+        lunch evolution_tulip-userdebug
+        mka evolution
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: evolution-x-tulip-build.zip
+        path: out/target/product/tulip/EvolutionX*.zip
