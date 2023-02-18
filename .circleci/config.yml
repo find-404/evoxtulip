@@ -2,6 +2,7 @@ jobs:
   build:
     machine:
       image: ubuntu-2004:2022.10.1
+    resource_class: large
       
     working_directory: ~/code
 
